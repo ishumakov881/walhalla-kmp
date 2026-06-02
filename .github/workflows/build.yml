@@ -21,9 +21,9 @@ jobs:
     strategy:
       matrix:
         config: [
-          { target: android, os: ubuntu-latest, tasks: ":device-kit:androidHostTest :nointernet:androidHostTest", continueOnError: false },
+          { target: android, os: ubuntu-latest, tasks: ":device-kit:testAndroidHostTest :nointernet:testAndroidHostTest", continueOnError: false },
           { target: apple, os: macos-latest, tasks: ":device-kit:iosSimulatorArm64Test :nointernet:iosSimulatorArm64Test", continueOnError: false },
-          { target: all-publications, os: macos-latest, tasks: ":device-kit:publishToMavenLocal :nointernet:publishToMavenLocal -Psigning.required=false", continueOnError: false },
+          { target: all-publications, os: macos-latest, tasks: ":device-kit:publishToMavenLocal :nointernet:publishToMavenLocal", continueOnError: false },
         ]
     runs-on: ${{ matrix.config.os }}
     name: Build ${{ matrix.config.target }}
@@ -44,7 +44,12 @@ jobs:
 
       - name: Test ${{ matrix.config.target }} targets
         continue-on-error: ${{ matrix.config.continueOnError }}
-        run: ./gradlew ${{ matrix.config.tasks }} --no-configuration-cache
+        run: |
+          if [ "${{ matrix.config.target }}" = "all-publications" ]; then
+            ./gradlew ${{ matrix.config.tasks }} -Psigning.required=false --no-configuration-cache
+          else
+            ./gradlew ${{ matrix.config.tasks }} --no-configuration-cache
+          fi
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
