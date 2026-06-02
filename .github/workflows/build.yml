@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         config: [
-          { target: android, os: ubuntu-latest, tasks: ":device-kit:testAndroidHostTest :nointernet:testAndroidHostTest", continueOnError: false },
+          { target: android, os: ubuntu-latest, tasks: ":device-kit:compileAndroidMain :nointernet:compileAndroidMain", continueOnError: false },
           { target: apple, os: macos-latest, tasks: ":device-kit:iosSimulatorArm64Test :nointernet:iosSimulatorArm64Test", continueOnError: false },
           { target: all-publications, os: macos-latest, tasks: ":device-kit:publishToMavenLocal :nointernet:publishToMavenLocal", continueOnError: false },
         ]

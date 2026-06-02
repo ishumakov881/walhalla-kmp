@@ -20,11 +20,9 @@ kotlin {
     androidLibrary {
         namespace = "com.walhalla.nointernet"
         compileSdk {
-            version = release(36) {
-                minorApiLevel = 1
-            }
+            version = release(libs.versions.android.compileSdk.get().toInt())
         }
-        minSdk = 24
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         withHostTestBuilder {
         }
