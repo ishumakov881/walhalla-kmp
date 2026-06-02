@@ -1,18 +1,15 @@
 package dev.walhalla.kmp.device
 
 import kotlinx.cinterop.*
-import platform.CoreFoundation.CFDictionaryRef
-import platform.CoreFoundation.CFTypeRefVar
-import platform.CoreFoundation.kCFBooleanTrue
+import platform.CoreFoundation.*
+import platform.Foundation.CFBridgingRetain
 import platform.Foundation.NSData
-import platform.Foundation.NSMutableDictionary
 import platform.Foundation.NSString
 import platform.Foundation.NSUTF8StringEncoding
+import platform.Foundation.NSUserDefaults
 import platform.Foundation.create
 import platform.Foundation.dataUsingEncoding
-import platform.Foundation.NSUserDefaults
 import platform.Security.*
-import platform.darwin.NSCopyingProtocol
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -43,13 +40,14 @@ actual class Installation {
 
 @OptIn(ExperimentalForeignApi::class)
 private fun readFromKeychain(): String? = memScoped {
-    val query = baseKeychainQuery().apply {
-        setKeychainObject(kCFBooleanTrue, kSecReturnData)
-        setKeychainObject(kSecMatchLimitOne, kSecMatchLimit)
-    }
+    val query = baseKeychainQuery() ?: return null
+    CFDictionaryAddValue(query, kSecReturnData, kCFBooleanTrue)
+    CFDictionaryAddValue(query, kSecMatchLimit, kSecMatchLimitOne)
+
     val result = alloc<CFTypeRefVar>()
-    val status = SecItemCopyMatching(query.asCFDictionary(), result.ptr)
+    val status = SecItemCopyMatching(query, result.ptr)
     if (status != errSecSuccess) return null
+
     val data = result.value as? NSData ?: return null
     NSString.create(data, NSUTF8StringEncoding)?.toString()?.takeIf { it.isNotEmpty() }
 }
@@ -58,30 +56,28 @@ private fun readFromKeychain(): String? = memScoped {
 private fun writeToKeychain(value: String) {
     deleteFromKeychain()
     val data = (value as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return
-    val query = baseKeychainQuery().apply {
-        setKeychainObject(data, kSecValueData)
-        setKeychainObject(kSecAttrAccessibleAfterFirstUnlock, kSecAttrAccessible)
-    }
-    SecItemAdd(query.asCFDictionary(), null)
+    val query = baseKeychainQuery() ?: return
+    CFDictionaryAddValue(query, kSecValueData, CFBridgingRetain(data))
+    CFDictionaryAddValue(query, kSecAttrAccessible, kSecAttrAccessibleAfterFirstUnlock)
+    SecItemAdd(query, null)
 }
 
 @OptIn(ExperimentalForeignApi::class)
 private fun deleteFromKeychain() {
-    SecItemDelete(baseKeychainQuery().asCFDictionary())
+    val query = baseKeychainQuery() ?: return
+    SecItemDelete(query)
 }
 
 @OptIn(ExperimentalForeignApi::class)
-private fun baseKeychainQuery(): NSMutableDictionary =
-    NSMutableDictionary().apply {
-        setKeychainObject(kSecClassGenericPassword, kSecClass)
-        setKeychainObject(SERVICE, kSecAttrService)
-        setKeychainObject(ACCOUNT, kSecAttrAccount)
-    }
-
-@OptIn(ExperimentalForeignApi::class)
-private fun NSMutableDictionary.setKeychainObject(value: Any?, key: CPointer<*>?) {
-    setObject(value as NSCopyingProtocol, forKey = key as NSCopyingProtocol)
+private fun baseKeychainQuery(): CFMutableDictionaryRef? {
+    val query = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, null, null) ?: return null
+    CFDictionaryAddValue(query, kSecClass, kSecClassGenericPassword)
+    CFDictionaryAddValue(query, kSecAttrService, SERVICE.toCFString())
+    CFDictionaryAddValue(query, kSecAttrAccount, ACCOUNT.toCFString())
+    return query
 }
 
-@Suppress("UNCHECKED_CAST")
-private fun NSMutableDictionary.asCFDictionary(): CFDictionaryRef? = this as CFDictionaryRef
+@OptIn(ExperimentalForeignApi::class)
+private fun String.toCFString(): CFStringRef? = memScoped {
+    CFStringCreateWithCString(kCFAllocatorDefault, cstr, kCFStringEncodingUTF8)
+}
