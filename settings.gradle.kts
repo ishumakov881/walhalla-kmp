@@ -1,4 +1,4 @@
-rootProject.name = "KMP"
+rootProject.name = "walhalla-kmp"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

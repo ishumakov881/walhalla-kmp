@@ -127,7 +127,7 @@ mavenPublishing {
     pom {
         name = "device-kit"
         description = "Kotlin Multiplatform device and installation identifiers for Android, iOS, and JVM"
-        url = "https://github.com/ishumakov881/KMP"
+        url = "https://github.com/ishumakov881/walhalla-kmp"
         licenses {
             license {
                 name.set("Apache-2.0")
@@ -142,13 +142,13 @@ mavenPublishing {
             }
         }
         scm {
-            connection.set("scm:git:git://github.com/ishumakov881/KMP.git")
-            developerConnection.set("scm:git:ssh://git@github.com/ishumakov881/KMP.git")
-            url.set("https://github.com/ishumakov881/KMP")
+            connection.set("scm:git:git://github.com/ishumakov881/walhalla-kmp.git")
+            developerConnection.set("scm:git:ssh://git@github.com/ishumakov881/walhalla-kmp.git")
+            url.set("https://github.com/ishumakov881/walhalla-kmp")
         }
         issueManagement {
             system.set("Github")
-            url.set("https://github.com/ishumakov881/KMP/issues")
+            url.set("https://github.com/ishumakov881/walhalla-kmp/issues")
         }
     }
 
