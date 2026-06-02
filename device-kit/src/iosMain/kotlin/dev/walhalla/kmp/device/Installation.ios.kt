@@ -78,6 +78,5 @@ private fun baseKeychainQuery(): CFMutableDictionaryRef? {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-private fun String.toCFString(): CFStringRef? = memScoped {
-    CFStringCreateWithCString(kCFAllocatorDefault, cstr, kCFStringEncodingUTF8)
-}
+private fun String.toCFString(): CFStringRef? =
+    CFBridgingRetain(this as NSString)?.reinterpret()
