@@ -38,7 +38,7 @@ actual class Installation {
     }
 }
 
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 private fun readFromKeychain(): String? = memScoped {
     val query = baseKeychainQuery() ?: return null
     CFDictionaryAddValue(query, kSecReturnData, kCFBooleanTrue)

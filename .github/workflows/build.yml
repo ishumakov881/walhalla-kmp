@@ -133,7 +133,10 @@ jobs:
           echo "signing.secretKeyRingFile=${HOME}/secret_key.gpg" >> gradle.properties
 
       - name: Publish to Maven Central
-        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        run: ./gradlew :device-kit:publishAndReleaseToMavenCentral :nointernet:publishAndReleaseToMavenCentral --no-configuration-cache
 
       - name: Create new release from tag
         env:
