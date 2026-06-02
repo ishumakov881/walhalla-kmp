@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>whatsapp</string>
+		<string>viber</string>
+		<string>tg</string>
+		<string>telegram</string>
+		<string>vk</string>
+		<string>vkontakte</string>
+		<string>yandexnavi</string>
+		<string>yandexmaps</string>
+		<string>comgooglemaps</string>
+		<string>maps</string>
+		<string>sberpay</string>
+		<string>mailto</string>
+		<string>tel</string>
+		<string>sms</string>
+	</array>
+</dict>
+</plist>

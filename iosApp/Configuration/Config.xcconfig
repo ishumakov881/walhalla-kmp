@@ -1,0 +1,13 @@
+// Apple Developer → Membership → Team ID (10 символов)
+TEAM_ID=XXXX
+
+PRODUCT_NAME=XXXX
+PRODUCT_BUNDLE_IDENTIFIER=dev.walhalla.online
+
+CURRENT_PROJECT_VERSION=1
+MARKETING_VERSION=1.0
+
+// Push Notifications: entitlements (aps-environment) + Info.plist UIBackgroundModes
+// Debug — development APNs; Release — production (TestFlight / App Store)
+CODE_SIGN_ENTITLEMENTS_DEBUG = iosApp/iosApp.entitlements
+CODE_SIGN_ENTITLEMENTS_RELEASE = iosApp/iosAppRelease.entitlements

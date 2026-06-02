@@ -1,0 +1,116 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+    paths-ignore:
+      - '**/README.md'
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        config: [
+          { target: android, os: ubuntu-latest, tasks: ":device-kit:androidHostTest :nointernet:androidHostTest", continueOnError: false },
+          { target: apple, os: macos-latest, tasks: ":device-kit:iosSimulatorArm64Test :nointernet:iosSimulatorArm64Test", continueOnError: false },
+          { target: all-publications, os: macos-latest, tasks: ":device-kit:publishToMavenLocal :nointernet:publishToMavenLocal -Psigning.required=false", continueOnError: false },
+        ]
+    runs-on: ${{ matrix.config.os }}
+    name: Build ${{ matrix.config.target }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Test ${{ matrix.config.target }} targets
+        continue-on-error: ${{ matrix.config.continueOnError }}
+        run: ./gradlew ${{ matrix.config.tasks }} --no-configuration-cache
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: macos-latest
+    needs:
+      - build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Validate publishable artifacts
+        run: ./gradlew :device-kit:publishToMavenLocal :nointernet:publishToMavenLocal -Psigning.required=false --no-configuration-cache
+
+      - name: Install GPG
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY || secrets.SIGNING_IN_MEMORY_KEY }}
+        run: |
+          brew install gpg
+
+          signing_key="${SIGNING_KEY}"
+          signing_key="${signing_key//\\n/$'\n'}"
+
+          if [[ "${signing_key}" != *"BEGIN PGP PRIVATE KEY BLOCK"* ]]; then
+            signing_key="$(printf '%s' "${SIGNING_KEY}" | base64 --decode)"
+          fi
+
+          if [[ "${signing_key}" != *"BEGIN PGP PRIVATE KEY BLOCK"* ]]; then
+            echo "::error::SIGNING_KEY or SIGNING_IN_MEMORY_KEY must contain an ASCII-armored private PGP key or its base64-encoded value."
+            exit 1
+          fi
+
+          printf '%s' "${signing_key}" | gpg --dearmor > "${HOME}/secret_key.gpg"
+          signing_key_id="$(gpg --show-keys --with-colons "${HOME}/secret_key.gpg" | awk -F: '/^(sec|pub):/ { print substr($5, length($5) - 7); exit }')"
+
+          if [[ -z "${signing_key_id}" ]]; then
+            echo "::error::Could not derive signing key id from the provided PGP key."
+            exit 1
+          fi
+
+          echo "SIGNING_KEY_ID=${signing_key_id}" >> "${GITHUB_ENV}"
+
+      - name: Add Gradle Properties
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD || secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
+        run: |
+          echo "mavenCentralUsername=${MAVEN_CENTRAL_USERNAME}" >> gradle.properties
+          echo "mavenCentralPassword=${MAVEN_CENTRAL_PASSWORD}" >> gradle.properties
+          echo "signing.keyId=${SIGNING_KEY_ID}" >> gradle.properties
+          echo "signing.password=${SIGNING_KEY_PASSWORD}" >> gradle.properties
+          echo "signing.secretKeyRingFile=${HOME}/secret_key.gpg" >> gradle.properties
+
+      - name: Publish to Maven Central
+        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+
+      - name: Create new release from tag
+        env:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          token: ${{ env.github_token }}

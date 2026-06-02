@@ -1,0 +1,4 @@
+<resources>
+    <string name="msg_default_channel_name">Сообщения ЛДС онлайн</string>
+    <string name="msg_silent_channel_name">Беззвучные сообщения ЛДС онлайн</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_messaging_service">Служба сообщений</string>
+    <string name="notif_group_name">Группа извещений</string>
+    <string name="msg_default_channel_id">channel.messages.default</string>
+    <string name="msg_default_channel_name">Сообщения ЛДС онлайн</string>
+    <string name="msg_default_channel_description">Канал сообщений ЛДС онлайн</string>
+    <string name="msg_silent_channel_id">channel.messages.silent</string>
+    <string name="msg_silent_channel_name">Беззвучные сообщения ЛДС онлайн</string>
+    <string name="msg_silent_channel_description">Канал беззвучных сообщений ЛДС онлайн</string>
+</resources>
