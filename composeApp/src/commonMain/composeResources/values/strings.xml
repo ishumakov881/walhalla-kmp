@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WebView iOs</string>
+    <string name="app_name" translatable="false">WebView_iOS</string>
 	<string name="msg_downloading">Загрузка...</string>
     <string name="title_messaging_service">Messaging service</string>
     <string name="msg_default_channel_name">Example messages</string>
