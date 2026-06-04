@@ -6,6 +6,7 @@ import platform.Foundation.localTimeZone
 import platform.UIKit.UIDevice
 
 actual fun provideLdsWebAppDeviceInfo(): AppDeviceInfo {
+    MACKeeper.obtainMacAddress()
     val device = UIDevice.currentDevice
     val bundle = NSBundle.mainBundle
     val appName = bundle.objectForInfoDictionaryKey("CFBundleDisplayName") as? String
@@ -28,5 +29,12 @@ actual fun provideLdsWebAppDeviceInfo(): AppDeviceInfo {
         deviceId = Installations.deviceId(),
         locale = locale,
         timeZone = timeZone,
+        sdk = device.systemVersion,
+        board = "",
+        brand = "Apple",
+        statsDevice = device.model,
+        hardware = "",
+        mac = MACKeeper.macAddress,
+        wifiFrequencyMhz = connectedWifiFrequencyMhz(),
     )
 }

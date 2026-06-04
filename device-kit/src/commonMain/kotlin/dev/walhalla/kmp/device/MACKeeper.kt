@@ -17,8 +17,8 @@ expect object MACKeeper {
     fun obtainMacAddress()
 }
 
-/** `obtainMacAddress()` + [MACKeeper.macAddress] для `device/stats`. */
-fun deviceMacAddressForStats(): String {
+/** `obtainMacAddress()` + [MACKeeper.macAddress]. */
+fun deviceMacAddress(): String {
     MACKeeper.obtainMacAddress()
     return MACKeeper.macAddress
 }

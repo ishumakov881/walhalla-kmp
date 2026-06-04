@@ -7,6 +7,7 @@ import java.util.Locale
 import java.util.TimeZone
 
 actual fun provideLdsWebAppDeviceInfo(): AppDeviceInfo {
+    MACKeeper.obtainMacAddress()
     val context = DeviceInfo.context
         ?: return AppDeviceInfo(
             appName = "Example",
@@ -19,6 +20,13 @@ actual fun provideLdsWebAppDeviceInfo(): AppDeviceInfo {
             deviceId = "",
             locale = Locale.getDefault().toString(),
             timeZone = TimeZone.getDefault().id,
+            sdk = Build.VERSION.SDK_INT.toString(),
+            board = Build.BOARD,
+            brand = Build.BRAND,
+            statsDevice = "${Build.MANUFACTURER} ${Build.MODEL}",
+            hardware = Build.HARDWARE,
+            mac = MACKeeper.macAddress,
+            wifiFrequencyMhz = connectedWifiFrequencyMhz(),
         )
 
     val packageManager = context.packageManager
@@ -50,6 +58,13 @@ actual fun provideLdsWebAppDeviceInfo(): AppDeviceInfo {
         deviceId = Installations.deviceId(),
         locale = Locale.getDefault().toString(),
         timeZone = TimeZone.getDefault().id,
+        sdk = Build.VERSION.SDK_INT.toString(),
+        board = Build.BOARD,
+        brand = Build.BRAND,
+        statsDevice = "${Build.MANUFACTURER} ${Build.MODEL}",
+        hardware = Build.HARDWARE,
+        mac = MACKeeper.macAddress,
+        wifiFrequencyMhz = connectedWifiFrequencyMhz(),
     )
 }
 

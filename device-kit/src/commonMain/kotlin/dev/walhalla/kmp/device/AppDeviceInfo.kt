@@ -15,6 +15,15 @@ data class AppDeviceInfo(
     val deviceId: String,
     val locale: String,
     val timeZone: String,
+    /** Поля для POST `device/stats` (ldsonline `StatsSendWorker.createFields`). */
+    val sdk: String,
+    val board: String,
+    val brand: String,
+    /** `device` в stats: на Android `MANUFACTURER MODEL`. */
+    val statsDevice: String,
+    val hardware: String,
+    val mac: String,
+    val wifiFrequencyMhz: Int?,
 )
 
 expect fun provideLdsWebAppDeviceInfo(): AppDeviceInfo
