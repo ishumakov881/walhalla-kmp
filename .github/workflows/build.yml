@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         config: [
-          { target: android, os: ubuntu-latest, tasks: ":device-kit:compileAndroidMain :nointernet:compileAndroidMain :sip:compileReleaseKotlinAndroid", continueOnError: false },
+          { target: android, os: ubuntu-latest, tasks: ":device-kit:compileAndroidMain :nointernet:compileAndroidMain :sip:assembleRelease", continueOnError: false },
           { target: apple, os: macos-latest, tasks: ":device-kit:iosSimulatorArm64Test :nointernet:iosSimulatorArm64Test :sip:iosSimulatorArm64MainKlibrary", continueOnError: false },
           { target: all-publications, os: macos-latest, tasks: ":device-kit:publishToMavenLocal :nointernet:publishToMavenLocal :sip:publishToMavenLocal", continueOnError: false },
         ]
