@@ -21,9 +21,9 @@ jobs:
     strategy:
       matrix:
         config: [
-          { target: android, os: ubuntu-latest, tasks: ":device-kit:compileAndroidMain :nointernet:compileAndroidMain", continueOnError: false },
-          { target: apple, os: macos-latest, tasks: ":device-kit:iosSimulatorArm64Test :nointernet:iosSimulatorArm64Test", continueOnError: false },
-          { target: all-publications, os: macos-latest, tasks: ":device-kit:publishToMavenLocal :nointernet:publishToMavenLocal", continueOnError: false },
+          { target: android, os: ubuntu-latest, tasks: ":device-kit:compileAndroidMain :nointernet:compileAndroidMain :sip:compileReleaseKotlinAndroid", continueOnError: false },
+          { target: apple, os: macos-latest, tasks: ":device-kit:iosSimulatorArm64Test :nointernet:iosSimulatorArm64Test :sip:iosSimulatorArm64MainKlibrary", continueOnError: false },
+          { target: all-publications, os: macos-latest, tasks: ":device-kit:publishToMavenLocal :nointernet:publishToMavenLocal :sip:publishToMavenLocal", continueOnError: false },
         ]
     runs-on: ${{ matrix.config.os }}
     name: Build ${{ matrix.config.target }}
@@ -73,7 +73,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Validate publishable artifacts
-        run: ./gradlew :device-kit:publishToMavenLocal :nointernet:publishToMavenLocal -Psigning.required=false --no-configuration-cache
+        run: ./gradlew :device-kit:publishToMavenLocal :nointernet:publishToMavenLocal :sip:publishToMavenLocal -Psigning.required=false --no-configuration-cache
 
       - name: Install GPG
         env:
@@ -136,7 +136,7 @@ jobs:
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-        run: ./gradlew :device-kit:publishAndReleaseToMavenCentral :nointernet:publishAndReleaseToMavenCentral --no-configuration-cache
+        run: ./gradlew :device-kit:publishAndReleaseToMavenCentral :nointernet:publishAndReleaseToMavenCentral :sip:publishAndReleaseToMavenCentral --no-configuration-cache
 
       - name: Create new release from tag
         env:

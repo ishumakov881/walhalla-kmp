@@ -36,3 +36,4 @@ plugins {
 include(":composeApp")
 include(":device-kit")
 include(":nointernet")
+include(":sip")
