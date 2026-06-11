@@ -10,8 +10,9 @@ on:
     branches: [ "main" ]
 
 concurrency:
-  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
-  cancel-in-progress: true
+  group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Do not cancel release builds triggered by version tags.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: write
@@ -26,12 +27,17 @@ jobs:
           { target: all-publications, os: macos-latest, tasks: ":device-kit:publishToMavenLocal :nointernet:publishToMavenLocal :sip:publishToMavenLocal", continueOnError: false },
         ]
     runs-on: ${{ matrix.config.os }}
+    timeout-minutes: ${{ matrix.config.target == 'apple' && 90 || matrix.config.target == 'all-publications' && 120 || 45 }}
     name: Build ${{ matrix.config.target }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Make gradlew executable
         run: chmod +x gradlew
+
+      - name: Make iOS native build script executable
+        if: matrix.config.os == 'macos-latest'
+        run: chmod +x sip/native/build-ios.sh
 
       - name: Setup JDK 17
         uses: actions/setup-java@v4
@@ -54,6 +60,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: macos-latest
+    timeout-minutes: 120
     needs:
       - build
 
@@ -62,6 +69,9 @@ jobs:
 
       - name: Make gradlew executable
         run: chmod +x gradlew
+
+      - name: Make iOS native build script executable
+        run: chmod +x sip/native/build-ios.sh
 
       - name: Setup JDK 17
         uses: actions/setup-java@v4
