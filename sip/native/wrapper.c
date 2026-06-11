@@ -55,7 +55,7 @@ void resetJniPointers(void) {
     g_jMessageFromJniMethodId = NULL;
 }
 
-void notifyEvent(int event, int scode, const char *callId) {
+void notifyEvent_jni(int event, int scode, const char *callId) {
     boolean_t flagAttached;
     JNIEnv *jniEnv = getJniEnv(&flagAttached);
     jobject jObj = NULL;

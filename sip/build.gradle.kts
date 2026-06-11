@@ -1,3 +1,6 @@
+import org.gradle.internal.os.OperatingSystem
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
@@ -18,6 +21,62 @@ kotlin {
     iosX64 { binaries.framework { baseName = xcfName } }
     iosArm64 { binaries.framework { baseName = xcfName } }
     iosSimulatorArm64 { binaries.framework { baseName = xcfName } }
+
+    val iosNativeTargets = listOf(
+        targets.getByName("iosArm64") as KotlinNativeTarget,
+        targets.getByName("iosX64") as KotlinNativeTarget,
+        targets.getByName("iosSimulatorArm64") as KotlinNativeTarget,
+    )
+
+    iosNativeTargets.forEach { target ->
+        val konanTargetName = target.konanTarget.name
+        val nativeLibDir = layout.buildDirectory.dir("native/ios/$konanTargetName")
+        val buildTelephonyTask = tasks.register<Exec>("buildTelephony${target.name.replaceFirstChar(Char::uppercaseChar)}") {
+            group = "native"
+            description = "Build libtelephony.a for ${target.name}"
+            onlyIf { OperatingSystem.current().isMacOsX }
+            workingDir = file("native")
+            commandLine(
+                "bash",
+                "build-ios.sh",
+                konanTargetName,
+                nativeLibDir.get().asFile.absolutePath,
+            )
+            inputs.dir(file("native"))
+            outputs.file(nativeLibDir.map { it.file("libtelephony.a") })
+        }
+
+        target.compilations.getByName("main") {
+            cinterops {
+                val telephony by creating {
+                    defFile(project.file("src/nativeInterop/cinterop/telephony.def"))
+                    includeDirs(project.file("native"))
+                }
+            }
+        }
+
+        target.binaries.all {
+            linkerOpts(
+                "-L${nativeLibDir.get().asFile.absolutePath}",
+                "-ltelephony",
+                "-framework",
+                "CoreAudio",
+                "-framework",
+                "AudioToolbox",
+                "-framework",
+                "AVFoundation",
+                "-framework",
+                "CoreFoundation",
+                "-framework",
+                "Security",
+                "-framework",
+                "SystemConfiguration",
+            )
+            linkTaskProvider.configure {
+                dependsOn(buildTelephonyTask)
+            }
+        }
+    }
 
     sourceSets {
         val desktopMain by getting

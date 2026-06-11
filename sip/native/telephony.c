@@ -23,8 +23,61 @@
 #include <re_sip.h>
 #include <re_mem.h>
 #include <baresip.h>
-#include "telephony.h"
+#include "telephony_platform.h"
 
+#ifdef __ANDROID__
+#include "telephony.h"
+#elif defined(__APPLE__)
+#include <stdio.h>
+#define LOGI(...) fprintf(stderr, "telephony: " __VA_ARGS__); fprintf(stderr, "\n")
+#define LOGW(...) fprintf(stderr, "telephony: WARN: " __VA_ARGS__); fprintf(stderr, "\n")
+#define LOGE(...) fprintf(stderr, "telephony: ERROR: " __VA_ARGS__); fprintf(stderr, "\n")
+#define LOGD(...) fprintf(stderr, "telephony: DEBUG: " __VA_ARGS__); fprintf(stderr, "\n")
+#endif
+
+#ifdef __APPLE__
+static const char *g_cfgBuf =
+        "# Core\n"
+        "poll_method kqueue\n"
+        "\n"
+        "# Call\n"
+        "call_local_timeout 120\n"
+        "call_max_calls 1\n"
+        "\n"
+        "# Audio\n"
+        "audio_player audiounit,nil\n"
+        "audio_source audiounit,nil\n"
+        "audio_alert audiounit,nil\n"
+        "audio_level no\n"
+        "ausrc_format s16\n"
+        "auplay_format s16\n"
+        "auenc_format s16\n"
+        "audec_format s16\n"
+        "audio_buffer 20-160\n"
+        "\n"
+        "# AVT\n"
+        "rtp_tos\t\t\t184\n"
+        "rtcp_mux\t\tno\n"
+        "jitter_buffer_type\tfixed\n"
+        "jitter_buffer_delay\t5-10\n"
+        "rtp_stats\t\tno\n"
+        "\n"
+        "# Network\n"
+        "dns_fallback\t\t8.8.8.8:53\n"
+        "\n"
+        "# Modules\n"
+        "module\t\t\topus.so\n"
+        "module\t\t\tg711.so\n"
+        "module\t\t\taudiounit.so\n"
+        "module\t\t\tstun.so\n"
+        "module\t\t\tturn.so\n"
+        "module\t\t\tice.so\n"
+        "module_tmp\t\tuuid.so\n"
+        "opus_bitrate\t\t28000\n"
+        "opus_stereo\t\tno\n"
+        "opus_samplerate\t48000\n"
+        "opus_ms_channels\t2\n";
+#else
 static const char *g_cfgBuf =
         "# Core\n"
         "poll_method epoll # poll, select, epoll ..\n"
@@ -89,6 +142,7 @@ static const char *g_cfgBuf =
         "opus_ms_channels\t2\t#total channels (2 or 4)\n"
         "#opus_ms_streams\t\t2\t#number of streams\n"
         "#opus_ms_c_streams\t2\t#number of coupled streams\n";
+#endif
 
 static struct mqueue *g_messageQueue;
 static struct call *g_call;
@@ -98,6 +152,7 @@ static void cmd_hangup();
 static int cmd_audioCall(AudioCall_t *ac);
 
 
+#if defined(__ANDROID__)
 static void android_log_msg(uint32_t level, const char *msg) {
     const char delims[] = "\n";
     char *cpy = strdup(msg);
@@ -121,6 +176,17 @@ static struct log g_androidLog = {
         .le = {NULL, NULL, NULL, NULL},
         .h = &android_log_msg
 };
+#elif defined(__APPLE__)
+static void apple_log_msg(uint32_t level, const char *msg) {
+    (void) level;
+    LOGI("%s", msg);
+}
+
+static struct log g_appleLog = {
+        .le = {NULL, NULL, NULL, NULL},
+        .h = &apple_log_msg
+};
+#endif
 
 static void event_listener(struct ua *ua, enum ua_event ev, struct call *call, const char *prm,
                            void *arg) {
@@ -245,9 +311,13 @@ static void tel_done(void) {
     libre_close();
 
     dbg_close();
+#ifdef __ANDROID__
     log_unregister_handler(&g_androidLog);
-
     resetJniPointers();
+#elif defined(__APPLE__)
+    log_unregister_handler(&g_appleLog);
+    telephony_reset_event_callback();
+#endif
 }
 
 int telephony_init(const char *path) {
@@ -255,8 +325,12 @@ int telephony_init(const char *path) {
     //struct player *player;
     int err;
 
+#ifdef __ANDROID__
     log_register_handler(&g_androidLog);
-    log_enable_debug(true); // TODO: remove this after a debugging
+#elif defined(__APPLE__)
+    log_register_handler(&g_appleLog);
+#endif
+    log_enable_debug(false);
 
     dbg_init(DBG_DEBUG, DBG_TIME);
 

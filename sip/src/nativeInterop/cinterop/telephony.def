@@ -1,0 +1,6 @@
+package = net.lds.sip.native
+headers = telephony_kn.h
+headerFilter = telephony_kn.h telephony_platform.h
+compilerOpts = -I../../../native
+
+---

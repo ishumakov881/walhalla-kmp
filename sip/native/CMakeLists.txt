@@ -21,6 +21,7 @@ add_library(
         SHARED
         # Provides a relative path to your source file(s).
         telephony.c
+        telephony_notify.c
         wrapper.c
         ${BARESIP_SOURCES}
         ${OPUS_SOURCES} ${CELT_SOURCES} ${SILK_SOURCES}
