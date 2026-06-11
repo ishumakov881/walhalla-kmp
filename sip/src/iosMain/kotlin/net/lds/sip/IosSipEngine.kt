@@ -156,10 +156,10 @@ class IosSipEngine : SipEngine {
     companion object {
         private var activeEngine: IosSipEngine? = null
 
-        private val mainLoopEntry = staticCFunction { arg: COpaquePointer? ->
+        private val mainLoopEntry = staticCFunction { _: COpaquePointer? ->
             telephony_kn_main_loop()
             activeEngine?.onLoopFinished()
-            null
+            null as COpaquePointer?
         }
     }
 }
