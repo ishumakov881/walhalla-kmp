@@ -2,12 +2,14 @@ name: Build
 
 on:
   push:
+    branches: [ "main" ]
     tags:
       - 'v*'
     paths-ignore:
       - '**/README.md'
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 concurrency:
   group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -82,8 +84,13 @@ jobs:
       - name: Setup gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Validate publishable artifacts
-        run: ./gradlew :device-kit:publishToMavenLocal :nointernet:publishToMavenLocal :sip:publishToMavenLocal -Psigning.required=false --no-configuration-cache
+      - name: Verify all targets before publish
+        run: |
+          ./gradlew \
+            :device-kit:compileAndroidMain :nointernet:compileAndroidMain :sip:assembleRelease \
+            :device-kit:iosSimulatorArm64Test :nointernet:iosSimulatorArm64Test :sip:iosSimulatorArm64MainKlibrary \
+            :device-kit:publishToMavenLocal :nointernet:publishToMavenLocal :sip:publishToMavenLocal \
+            -Psigning.required=false --no-configuration-cache
 
       - name: Install GPG
         env:
